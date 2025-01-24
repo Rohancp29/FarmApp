@@ -82,7 +82,6 @@
     </style>
 </head>
 <body>
-    <!-- Include header -->
     {% include 'header.html' %}
 
     <h1>Data Submitted</h1>
@@ -118,7 +117,6 @@
                 <td>{{ entry.submitted_by }}</td>
                 <td>
                     {% if role == "Senior Manager" %}
-                        <!-- Single entry delete form -->
                         <form action="{{ url_for('delete_data', data_id=entry._id) }}" method="POST" style="display:inline;">
                             <button type="submit" onclick="return confirm('Are you sure you want to delete this entry?')" class="button">Delete</button>
                         </form>
@@ -135,7 +133,6 @@
         <button type="button">Back to Home</button>
     </a>
 
-    <!-- Include footer -->
     {% include 'footer.html' %}
 </body>
 </html>

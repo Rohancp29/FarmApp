@@ -4,7 +4,7 @@ client = MongoClient("mongodb+srv://rohanpatil:Patil2909@farmapp.wuxmi.mongodb.n
 db = client['FarmApp']
 users_collection = db['users']
 
-# Add initial users
+
 users = [
     {"name": "A", "role": "Field Executive", "password": "A"},
     {"name": "B", "role": "Field Executive", "password": "B"},
@@ -13,6 +13,6 @@ users = [
     {"name": "E", "role": "Senior Manager", "password": "E"}
 ]
 
-users_collection.delete_many({})  # Clear existing data
+users_collection.delete_many({}) 
 users_collection.insert_many(users)
 print("Database initialized!")

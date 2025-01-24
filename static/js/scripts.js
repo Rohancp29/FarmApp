@@ -1,7 +1,5 @@
 function addSpecies() {
     const speciesContainer = document.getElementById('species-container');
-
-    // Create new species fields
     const speciesInput = document.createElement('input');
     speciesInput.type = 'text';
     speciesInput.name = 'species[]';
@@ -14,7 +12,7 @@ function addSpecies() {
     countInput.placeholder = 'Count';
     countInput.required = true;
 
-    // Create a remove button only after a new species is added
+
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.textContent = 'Remove Species';
@@ -23,8 +21,7 @@ function addSpecies() {
         speciesContainer.removeChild(countInput);
         speciesContainer.removeChild(removeButton);
     };
-
-    // Append new elements to the species container
+    
     speciesContainer.appendChild(speciesInput);
     speciesContainer.appendChild(countInput);
     speciesContainer.appendChild(removeButton);

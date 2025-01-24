@@ -3,40 +3,33 @@ from pymongo import MongoClient
 import os
 from bson import ObjectId
 from opencage.geocoder import OpenCageGeocode
+from werkzeug.utils import secure_filename
 from pprint import pprint
-
-from flask import request, render_template, redirect, url_for, session
-import os
-from opencage.geocoder import OpenCageGeocode
-from werkzeug.utils import secure_filename
-
-from werkzeug.utils import secure_filename
-import os
 
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change to a secure secret key
-
-# MongoDB connection
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
+ 
 client = MongoClient("mongodb+srv://rohanpatil:Patil2909@farmapp.wuxmi.mongodb.net/?retryWrites=true&w=majority&appName=Farmapp")
 db = client['FarmApp']
 users_collection = db['users']
 farmer_data_collection = db['farmer_data']
 
-# OpenCage API key
 geocoder = OpenCageGeocode('9ceef2fbe59c4197ace5a70f35d0cc22')
 
-# Function to get address from coordinates using OpenCage
+
 def get_address_from_coordinates(lat, lng):
     results = geocoder.reverse_geocode(lat, lng)
     if results and len(results) > 0:
-        return results[0]['formatted']  # Return the formatted address
-    return None  # If no result is found, return None
+        return results[0]['formatted']  
+    return None  
 
-# Routes
+
 @app.route('/')
 def login():
     return render_template('login.html')
+
+
 
 @app.route('/login', methods=['POST'])
 def handle_login():
@@ -48,8 +41,10 @@ def handle_login():
     if user:
         session['member_name'] = user['name']
         session['role'] = user['role']
-        return redirect(url_for('home'))  # Redirect to home after successful login
+        return redirect(url_for('home')) 
     return render_template('login.html', error="Invalid Credentials! Please try again.")
+
+
 
 @app.route('/home')
 def home():
@@ -62,46 +57,38 @@ def home():
 def submit_form():
     if 'member_name' not in session:
         return redirect(url_for('login'))
-
-    # Get form data
+  
     species_list = request.form.getlist('species[]')
     count_list = request.form.getlist('count[]')
     farmer_name = request.form['farmer_name']
     contact_number = request.form['contact_number']
-    plot_location = request.form['plot_location']  # Location as text
+    plot_location = request.form['plot_location']  
 
-    # Validate plot location
     if not plot_location:
         return render_template('home.html', error={"plot_location": "Plot location is required."}, name=session['member_name'], role=session['role'])
 
-    # Contact number validation
     if not contact_number.isdigit() or len(contact_number) != 10:
         return render_template('home.html', error={"contact_number": "Contact number must be exactly 10 digits."}, name=session['member_name'], role=session['role'])
-
-    # File handling (check if file is present and valid)
+   
     file = request.files.get('field_photo')
     if file is None or file.filename == '':
         return render_template('home.html', error={"file": "Please upload a field photo."}, name=session['member_name'], role=session['role'])
 
-    # Sanitize filename and save the file
     filename = secure_filename(file.filename)
     file_path = os.path.join('uploads', filename)
     file.save(file_path)
-
-    # Prepare data for MongoDB
+  
     data = {
         "farmer_name": farmer_name,
         "contact_number": contact_number,
-        "plot_location": plot_location,  # Store the location as text
-        "tree_species": dict(zip(species_list, count_list)),  # Store as a dictionary (species: count)
+        "plot_location": plot_location,  
+        "tree_species": dict(zip(species_list, count_list)), 
         "submitted_by": session['member_name'],
         "updated_by": None,
         "field_photo": file_path
     }
 
-    # Insert data into the MongoDB collection
     farmer_data_collection.insert_one(data)
-
     return redirect(url_for('home'))
 
 
@@ -114,7 +101,6 @@ def view_data():
     member_name = session['member_name']
     data = []
 
-    # Role-based data access
     if role == "Field Executive":
         data = farmer_data_collection.find({"submitted_by": member_name})
     elif role == "Field Manager" and member_name == "C":
@@ -128,7 +114,6 @@ def view_data():
 
     data_list = list(data)
 
-    # Normalize tree_species to a dictionary if it is a list
     for entry in data_list:
         if isinstance(entry.get("tree_species"), list) and isinstance(entry.get("species_count"), list):
             entry["tree_species"] = dict(zip(entry["tree_species"], entry["species_count"]))
@@ -136,6 +121,7 @@ def view_data():
             entry["tree_species"] = {}
 
     return render_template('view_data.html', data=data_list, name=member_name, role=role)
+
 
 @app.route('/edit_data/<data_id>', methods=['GET', 'POST'])
 def edit_data(data_id):
@@ -158,15 +144,11 @@ def edit_data(data_id):
         farmer_data_collection.update_one({"_id": ObjectId(data_id)}, {"$set": update_data})
         return redirect(url_for('view_data'))
 
-    # Retrieve the data for the given ID
     data = farmer_data_collection.find_one({"_id": ObjectId(data_id)})
     if data:
-        # Ensure tree_species is in dictionary format for rendering
         if isinstance(data.get("tree_species"), list) and isinstance(data.get("species_count"), list):
-            # Convert list of species and counts into a dictionary
             data["tree_species"] = dict(zip(data["tree_species"], data["species_count"]))
         elif not isinstance(data.get("tree_species"), dict):
-            # If tree_species is not already a dictionary, initialize it as an empty one
             data["tree_species"] = {}
 
     return render_template('edit_data.html', data=data)
@@ -174,29 +156,21 @@ def edit_data(data_id):
 @app.route('/delete_data/<data_id>', methods=['POST'])    
 def delete_data(data_id):
     if 'member_name' not in session or session['role'] != "Senior Manager":
-        return redirect(url_for('login'))  # Redirect if session is not found or role doesn't match
-    
-    # Ensure we can convert the data_id to an ObjectId
+        return redirect(url_for('login'))
+
     try:
         farmer_data_collection.delete_one({"_id": ObjectId(data_id)})
     except Exception as e:
         print(f"Error deleting entry: {e}")
-    
-    # Stay on the same page (view data)
-    return redirect(url_for('view_data'))  # Redirect to the same view data page after deletion
+    return redirect(url_for('view_data'))
 
 
 @app.route('/delete_all_data', methods=['POST'])
 def delete_all_data():
-    # Ensure the user is logged in and has the correct role
     if 'member_name' not in session or session['role'] != "Senior Manager":
-        return redirect(url_for('login'))  # Redirect if session is not found or role doesn't match
-    
-    # Delete all data submitted by the logged-in user (Field Executive)
+        return redirect(url_for('login'))
     farmer_data_collection.delete_many({"submitted_by": session['member_name']})
-    
-    # Stay on the same page (view data)
-    return redirect(url_for('view_data'))  # Redirect to the same view data page after deletion
+    return redirect(url_for('view_data'))  
 
 
 @app.route('/logout')

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/home_validation.js') }}"></script>
     <script>
-        // Function to get the current location and convert it to an address using OpenCage API
         function getCurrentLocation() {
             if (navigator.geolocation) {
                 console.log("Geolocation available! Trying to fetch location...");
@@ -17,8 +16,6 @@
                     const longitude = position.coords.longitude;
 
                     console.log("Location fetched: Latitude = " + latitude + ", Longitude = " + longitude);
-
-                    // Call OpenCage API to get the address from latitude and longitude
                     fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=9ceef2fbe59c4197ace5a70f35d0cc22`)
                         .then(response => response.json())
                         .then(data => {
@@ -155,7 +152,7 @@
         #map {
             width: 100%;
             height: 400px;
-            display: none; /* Initially hidden */
+            display: none;
             margin-top: 20px;
             border: 1px solid #ddd;
         }
