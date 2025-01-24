@@ -43,6 +43,7 @@ My Name is Rohan Patil
    - Field Executive B’s Dashboard: ![B's Dashboard](models/B's%20Dashboard.JPG)
    - Field Manager C’s Dashboard: ![C's Dashboard](models/C's%20Dashboard.JPG)
    - Field Manager D’s Dashboard: ![D's Dashboard](models/D's%20Dashboard.JPG)
+   - Field Manager D’s Dashboard: ![D's Dashboard](models/E's%20Dashboard.JPG)
    - Senior Manager E’s Edit Dashboard: ![Edit Dashboard](models/Edit%20data%20dashboard.JPG)
 
 ## Installation Instructions
