@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="{{ url_for('static', filename='js/home_validation.js') }}"></script>
+</head>
+<body>
+    {% include 'header.html' %}
+    <h1>Hi, {{ name }}!</h1>
+    <p>Your role: {{ role }}</p>
+
+    <a href="{{ url_for('view_data') }}">
+        <button type="button">View Details</button>
+    </a>
+
+    <h2>Fill the Form</h2>
+    <form id="homeForm" action="{{ url_for('submit_form') }}" method="POST" enctype="multipart/form-data">
+        <label for="farmer_name">Farmer Name:</label>
+        <input type="text" id="farmer_name" name="farmer_name" required><br><br>
+
+        <label for="contact_number">Contact Number:</label>
+        <input type="text" id="contact_number" name="contact_number" required><br><br>
+
+        <label for="plot_location">Plot Location:</label>
+        <input type="text" id="plot_location" name="plot_location" required><br><br>
+
+        <label for="field_photo">Field Photo:</label>
+        <input type="file" id="field_photo" name="field_photo"><br><br>
+
+        <label>Tree Species:</label>
+        <div id="species-container">
+            <input type="text" name="species[]" placeholder="Species Name" required>
+            <input type="number" name="count[]" placeholder="Count" required><br><br>
+        </div>
+        <button type="button" onclick="addSpecies()">+ Add Species</button><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+    {% include 'footer.html' %}
+</body>
+</html>

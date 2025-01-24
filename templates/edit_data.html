@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data</title>
+    <style>
+        form {
+            width: 50%;
+            margin: auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        form input, form textarea, form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+    
+    <h1>Edit Data</h1>
+
+    <form action="{{ url_for('update_data', data_id=data._id) }}" method="POST">
+        <label for="farmer_name">Farmer Name:</label>
+        <input type="text" id="farmer_name" name="farmer_name" value="{{ data.farmer_name }}" required>
+
+        <label for="contact_number">Contact Number:</label>
+        <input type="text" id="contact_number" name="contact_number" value="{{ data.contact_number }}" pattern="^\d{10}$" title="Please enter a valid 10-digit contact number" required>
+
+        <label for="plot_location">Plot Location:</label>
+        <input type="text" id="plot_location" name="plot_location" value="{{ data.plot_location }}" required>
+
+        <label>Tree Species:</label>
+        <div id="species-container">
+            {% for species, count in data.tree_species.items() %}
+            <div>
+                <input type="text" name="species[]" value="{{ species }}" placeholder="Species Name" required>
+                <input type="number" name="count[]" value="{{ count }}" placeholder="Count" required>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" onclick="addSpecies()">+ Add Species</button>
+
+        <label for="submitted_by">Submitted By:</label>
+        <input type="text" id="submitted_by" name="submitted_by" value="{{ data.submitted_by }}" readonly>
+
+        <br><br>
+        <button type="submit">Save Changes</button>
+    </form>
+
+    <script>
+        function addSpecies() {
+            const container = document.getElementById('species-container');
+            const newSpecies = document.createElement('div');
+            newSpecies.innerHTML = `
+                <input type="text" name="species[]" placeholder="Species Name" required>
+                <input type="number" name="count[]" placeholder="Count" required>
+                <button type="button" onclick="removeSpecies(this)">Remove</button>
+            `;
+            container.appendChild(newSpecies);
+        }
+
+        function removeSpecies(button) {
+            button.parentElement.remove();
+        }
+    </script>
+
+    {% include 'footer.html' %}
+</body>
+</html>

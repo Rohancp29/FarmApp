@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Data</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include header -->
+    {% include 'header.html' %}
+
+    <h1>Data Submitted</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Farmer Name</th>
+                <th>Contact Number</th>
+                <th>Plot Location</th>
+                <th>Tree Species</th>
+                <th>Species Count</th>
+                <th>Submitted By</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in data %}
+            <tr>
+                <td>{{ entry.farmer_name }}</td>
+                <td>{{ entry.contact_number }}</td>
+                <td>{{ entry.plot_location }}</td>
+                <td>{{ entry.tree_species }}</td>
+                <td>{{ entry.species_count }}</td>
+                <td>{{ entry.submitted_by }}</td>
+                <td>
+                    <!-- Edit functionality -->
+                    {% if role == 'Senior Manager' %}
+                    <a href="{{ url_for('edit_data', data_id=entry._id) }}" class="button">Edit</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{{ url_for('home') }}">
+        <button type="button">Back to Home</button>
+    </a>
+
+    <!-- Include footer -->
+    {% include 'footer.html' %}
+</body>
+</html>
