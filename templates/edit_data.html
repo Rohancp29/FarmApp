@@ -19,7 +19,7 @@
             font-weight: bold;
         }
 
-        form input, form textarea, form button {
+        form input, form button {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -33,6 +33,11 @@
             color: white;
             border: none;
         }
+
+        .species-entry {
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -40,7 +45,7 @@
     
     <h1>Edit Data</h1>
 
-    <form action="{{ url_for('update_data', data_id=data._id) }}" method="POST">
+    <form action="{{ url_for('edit_data', data_id=data._id) }}" method="POST">
         <label for="farmer_name">Farmer Name:</label>
         <input type="text" id="farmer_name" name="farmer_name" value="{{ data.farmer_name }}" required>
 
@@ -53,12 +58,14 @@
         <label>Tree Species:</label>
         <div id="species-container">
             {% for species, count in data.tree_species.items() %}
-            <div>
+            <div class="species-entry">
                 <input type="text" name="species[]" value="{{ species }}" placeholder="Species Name" required>
                 <input type="number" name="count[]" value="{{ count }}" placeholder="Count" required>
+                <button type="button" onclick="removeSpecies(this)">Remove</button>
             </div>
             {% endfor %}
         </div>
+
         <button type="button" onclick="addSpecies()">+ Add Species</button>
 
         <label for="submitted_by">Submitted By:</label>
@@ -69,9 +76,11 @@
     </form>
 
     <script>
+        // Function to add new species and count inputs dynamically
         function addSpecies() {
             const container = document.getElementById('species-container');
             const newSpecies = document.createElement('div');
+            newSpecies.classList.add('species-entry');
             newSpecies.innerHTML = `
                 <input type="text" name="species[]" placeholder="Species Name" required>
                 <input type="number" name="count[]" placeholder="Count" required>
@@ -80,6 +89,7 @@
             container.appendChild(newSpecies);
         }
 
+        // Function to remove a species entry
         function removeSpecies(button) {
             button.parentElement.remove();
         }

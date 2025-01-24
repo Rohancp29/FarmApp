@@ -5,6 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <script src="{{ url_for('static', filename='js/home_validation.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&callback=initMap&v=weekly" async></script>
+    <script>
+        let geocoder;
+
+        // Initialize the Google Maps geocoder
+        function initMap() {
+            geocoder = new google.maps.Geocoder();
+        }
+
+        // Function to get the current location and convert it to an address
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                console.log("Geolocation available! Trying to fetch location...");
+
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    console.log("Location fetched: Latitude = " + latitude + ", Longitude = " + longitude);
+
+                    const latlng = { lat: latitude, lng: longitude };
+                    
+                    // Call the geocoder to get the human-readable address
+                    geocoder.geocode({ location: latlng }, function(results, status) {
+                        if (status === 'OK') {
+                            if (results[0]) {
+                                // Get the formatted address
+                                const formattedAddress = results[0].formatted_address;
+                                console.log("Formatted address: " + formattedAddress);
+
+                                // Display the address in the plot_location input field
+                                document.getElementById('plot_location').value = formattedAddress;
+                            } else {
+                                alert('No results found for this location');
+                            }
+                        } else {
+                            alert('Geocoder failed due to: ' + status);
+                            console.error('Geocoding failed', status);
+                        }
+                    });
+                }, function(error) {
+                    console.error("Error occurred: ", error);
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            alert("User denied the request for Geolocation.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert("Location information is unavailable.");
+                            break;
+                        case error.TIMEOUT:
+                            alert("The request to get user location timed out.");
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            alert("An unknown error occurred.");
+                            break;
+                    }
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+                console.error('Geolocation is not supported');
+            }
+        }
+    </script>
 </head>
 <body>
     {% include 'header.html' %}
@@ -24,7 +87,8 @@
         <input type="text" id="contact_number" name="contact_number" required><br><br>
 
         <label for="plot_location">Plot Location:</label>
-        <input type="text" id="plot_location" name="plot_location" required><br><br>
+        <input type="text" id="plot_location" name="plot_location" required>
+        <button type="button" onclick="getCurrentLocation()">Get Current Location</button><br><br>
 
         <label for="field_photo">Field Photo:</label>
         <input type="file" id="field_photo" name="field_photo"><br><br>

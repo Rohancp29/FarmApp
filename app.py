@@ -4,7 +4,7 @@ import os
 from bson import ObjectId
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'your_secret_key'  # Change to a secure secret key
 
 # MongoDB connection
 client = MongoClient("mongodb+srv://rohanpatil:Patil2909@farmapp.wuxmi.mongodb.net/?retryWrites=true&w=majority&appName=Farmapp")
@@ -27,7 +27,7 @@ def handle_login():
     if user:
         session['member_name'] = user['name']
         session['role'] = user['role']
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Redirect to home after successful login
     return render_template('login.html', error="Invalid Credentials! Please try again.")
 
 @app.route('/home')
@@ -43,7 +43,7 @@ def submit_form():
 
     species_list = request.form.getlist('species[]')
     count_list = request.form.getlist('count[]')
-
+    
     data = {
         "farmer_name": request.form['farmer_name'],
         "contact_number": request.form['contact_number'],
@@ -88,6 +88,13 @@ def view_data():
 
     data_list = list(data)
 
+    # Normalize tree_species to a dictionary if it is a list
+    for entry in data_list:
+        if isinstance(entry.get("tree_species"), list) and isinstance(entry.get("species_count"), list):
+            entry["tree_species"] = dict(zip(entry["tree_species"], entry["species_count"]))
+        elif not isinstance(entry.get("tree_species"), dict):
+            entry["tree_species"] = {}
+
     return render_template('view_data.html', data=data_list, name=member_name, role=role)
 
 @app.route('/edit_data/<data_id>', methods=['GET', 'POST'])
@@ -96,26 +103,60 @@ def edit_data(data_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
+        updated_tree_species = dict(zip(
+            request.form.getlist('species[]'),
+            request.form.getlist('count[]')
+        ))
+
         update_data = {
             "farmer_name": request.form['farmer_name'],
             "contact_number": request.form['contact_number'],
             "plot_location": request.form['plot_location'],
-            "tree_species": dict(zip(request.form.getlist('species[]'), request.form.getlist('count[]'))),
+            "tree_species": updated_tree_species,
             "updated_by": session['member_name']
         }
         farmer_data_collection.update_one({"_id": ObjectId(data_id)}, {"$set": update_data})
         return redirect(url_for('view_data'))
 
+    # Retrieve the data for the given ID
     data = farmer_data_collection.find_one({"_id": ObjectId(data_id)})
+    if data:
+        # Ensure tree_species is in dictionary format for rendering
+        if isinstance(data.get("tree_species"), list) and isinstance(data.get("species_count"), list):
+            # Convert list of species and counts into a dictionary
+            data["tree_species"] = dict(zip(data["tree_species"], data["species_count"]))
+        elif not isinstance(data.get("tree_species"), dict):
+            # If tree_species is not already a dictionary, initialize it as an empty one
+            data["tree_species"] = {}
+
     return render_template('edit_data.html', data=data)
 
-@app.route('/delete_data/<data_id>', methods=['POST'])
+@app.route('/delete_data/<data_id>', methods=['POST'])    
 def delete_data(data_id):
     if 'member_name' not in session or session['role'] != "Senior Manager":
-        return redirect(url_for('login'))
-    farmer_data_collection.delete_one({"_id": ObjectId(data_id)})
-    return redirect(url_for('view_data'))
+        return redirect(url_for('login'))  # Redirect if session is not found or role doesn't match
+    
+    # Ensure we can convert the data_id to an ObjectId
+    try:
+        farmer_data_collection.delete_one({"_id": ObjectId(data_id)})
+    except Exception as e:
+        print(f"Error deleting entry: {e}")
+    
+    # Stay on the same page (view data)
+    return redirect(url_for('view_data'))  # Redirect to the same view data page after deletion
 
+
+@app.route('/delete_all_data', methods=['POST'])
+def delete_all_data():
+    # Ensure the user is logged in and has the correct role
+    if 'member_name' not in session or session['role'] != "Senior Manager":
+        return redirect(url_for('login'))  # Redirect if session is not found or role doesn't match
+    
+    # Delete all data submitted by the logged-in user (Field Executive)
+    farmer_data_collection.delete_many({"submitted_by": session['member_name']})
+    
+    # Stay on the same page (view data)
+    return redirect(url_for('view_data'))  # Redirect to the same view data page after deletion
 
 
 @app.route('/logout')
