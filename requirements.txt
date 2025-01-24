@@ -3,3 +3,4 @@ pymongo
 bson
 opencage
 Werkzeug
+bcrypt

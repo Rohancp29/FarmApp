@@ -5,6 +5,8 @@ from bson import ObjectId
 from opencage.geocoder import OpenCageGeocode
 from werkzeug.utils import secure_filename
 from pprint import pprint
+from bcrypt import checkpw
+
 
 
 app = Flask(__name__)
@@ -35,15 +37,16 @@ def login():
 def handle_login():
     name = request.form['name'].strip()
     password = request.form['password'].strip()
-    user = users_collection.find_one({"name": name, "password": password})
 
-    if user:
+    user = users_collection.find_one({"name": name})
+
+    if user and checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+ 
         session['member_name'] = user['name']
         session['role'] = user['role']
         return redirect(url_for('home'))
 
     return render_template('login.html', error="Invalid Credentials! Please try again.")
-
 
 
 @app.route('/home')
@@ -99,7 +102,8 @@ def view_data():
 
     role = session['role']
     member_name = session['member_name']
-    data = []
+    search_query = request.args.get("search", "").strip().lower()  
+    data_list = []
 
     role_conditions = {
         "Field Executive": {"submitted_by": member_name},
@@ -107,24 +111,32 @@ def view_data():
             "C": {"submitted_by": {"$in": ["A", "B", "C"]}},
             "D": {"submitted_by": "D"}
         },
-        "Senior Manager": {}, 
+        "Senior Manager": {}
     }
 
     if role == "Field Manager" and member_name in role_conditions[role]:
         query = role_conditions[role][member_name]
     else:
-        query = role_conditions.get(role, {"submitted_by": None})
+        query = role_conditions.get(role, {})
 
-    data = farmer_data_collection.find(query)
-    data_list = list(data)
+    if search_query:
+        query["farmer_name"] = {"$regex": search_query, "$options": "i"}
+    try:
+        data = farmer_data_collection.find(query)
+        data_list = list(data)
 
-    for entry in data_list:
-        if isinstance(entry.get("tree_species"), list) and isinstance(entry.get("species_count"), list):
-            entry["tree_species"] = dict(zip(entry["tree_species"], entry["species_count"]))
-        elif not isinstance(entry.get("tree_species"), dict):
-            entry["tree_species"] = {}
+        for entry in data_list:
+            tree_species = entry.get("tree_species")
+            species_count = entry.get("species_count")
+            if isinstance(tree_species, list) and isinstance(species_count, list):
+                entry["tree_species"] = dict(zip(tree_species, species_count))
+            elif not isinstance(tree_species, dict):
+                entry["tree_species"] = {}
+    except Exception as e:
+        print(f"Error fetching data: {e}")
 
     return render_template('view_data.html', data=data_list, name=member_name, role=role)
+
 
 @app.route('/edit_data/<data_id>', methods=['GET', 'POST'])
 def edit_data(data_id):
