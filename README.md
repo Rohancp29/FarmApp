@@ -33,12 +33,17 @@ My Name is Rohan Patil
 
 ## Screenshots
 1. **Login Page**
+   Role-Based Login System:
+   - Separate login credentials for:
+     - Field Executives: `A` (username: A, password: A), `B` (username: B, password: B).
+     - Field Managers: `C` (username: C, password: C), `D` (username: D, password: D).
+     - Senior Manager: `E` (username: E, password: E).
    ![Login Page](models/LoginPage.JPG)
 
-2. **Home Page**
+3. **Home Page**
    ![Home Page](models/HomePage.JPG)
 
-3. **Dashboards:**
+4. **Dashboards:**
    - Field Executive A’s Dashboard: ![A's Dashboard](models/A's%20Dashboard.JPG)
    - Field Executive B’s Dashboard: ![B's Dashboard](models/B's%20Dashboard.JPG)
    - Field Manager C’s Dashboard: ![C's Dashboard](models/C's%20Dashboard.JPG)
