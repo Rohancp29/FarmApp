@@ -6,16 +6,8 @@
     <title>Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/home_validation.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&callback=initMap&v=weekly" async></script>
     <script>
-        let geocoder;
-
-        // Initialize the Google Maps geocoder
-        function initMap() {
-            geocoder = new google.maps.Geocoder();
-        }
-
-        // Function to get the current location and convert it to an address
+        // Function to get the current location and convert it to an address using OpenCage API
         function getCurrentLocation() {
             if (navigator.geolocation) {
                 console.log("Geolocation available! Trying to fetch location...");
@@ -26,26 +18,22 @@
 
                     console.log("Location fetched: Latitude = " + latitude + ", Longitude = " + longitude);
 
-                    const latlng = { lat: latitude, lng: longitude };
-                    
-                    // Call the geocoder to get the human-readable address
-                    geocoder.geocode({ location: latlng }, function(results, status) {
-                        if (status === 'OK') {
-                            if (results[0]) {
-                                // Get the formatted address
-                                const formattedAddress = results[0].formatted_address;
+                    // Call OpenCage API to get the address from latitude and longitude
+                    fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=9ceef2fbe59c4197ace5a70f35d0cc22`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.results && data.results[0]) {
+                                const formattedAddress = data.results[0].formatted;
                                 console.log("Formatted address: " + formattedAddress);
-
-                                // Display the address in the plot_location input field
                                 document.getElementById('plot_location').value = formattedAddress;
                             } else {
-                                alert('No results found for this location');
+                                alert('No address found for this location');
                             }
-                        } else {
-                            alert('Geocoder failed due to: ' + status);
-                            console.error('Geocoding failed', status);
-                        }
-                    });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching location data:', error);
+                            alert('Unable to fetch address');
+                        });
                 }, function(error) {
                     console.error("Error occurred: ", error);
                     switch (error.code) {
@@ -125,15 +113,11 @@
         }
 
         button {
-            padding: 15px 20px; /* Increase the padding for more space at top and bottom */
+            padding: 15px 20px;
             font-size: 1rem;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .add-species-btn, button {
-                padding: 15px 20px; /* Ensuring both buttons have similar padding */
-        }    
-
 
         button:hover {
             background-color: #2980b9;
@@ -168,6 +152,17 @@
             gap: 20px;
         }
 
+        #map {
+            width: 100%;
+            height: 400px;
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+        .error {
+            color: red;
+            font-size: 0.875em;
+        }   
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -200,35 +195,38 @@
         <form id="homeForm" action="{{ url_for('submit_form') }}" method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="farmer_name">Farmer Name:</label>
-                <input type="text" id="farmer_name" name="farmer_name" required>
+                <input type="text" id="farmer_name" name="farmer_name" value="{{ request.form.get('farmer_name', '') }}" required>
             </div>
 
             <div class="form-group">
                 <label for="contact_number">Contact Number:</label>
-                <input type="text" id="contact_number" name="contact_number" required>
-                            {% if error %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-            {% endif %}
-
+                <input type="text" id="contact_number" name="contact_number" value="{{ request.form.get('contact_number', '') }}" required>
+                {% if error and 'contact_number' in error %}
+                    <span class="error">{{ error['contact_number'] }}</span>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label for="plot_location">Plot Location:</label>
-                <input type="text" id="plot_location" name="plot_location" required>
+                <input type="text" id="plot_location" name="plot_location" value="{{ request.form.get('plot_location', '') }}" required>
+                {% if error and 'plot_location' in error %}
+                    <span class="error">{{ error['plot_location'] }}</span>
+                {% endif %}
                 <button type="button" onclick="getCurrentLocation()">Get Current Location</button>
             </div>
 
             <div class="form-group">
                 <label for="field_photo">Field Photo:</label>
                 <input type="file" id="field_photo" name="field_photo" required>
+                {% if error and 'file' in error %}
+                    <span class="error">{{ error['file'] }}</span>
+                {% endif %}
             </div>
 
             <div class="form-group species-container" id="species-container">
                 <label>Tree Species:</label>
-                <input type="text" name="species[]" placeholder="Species Name" required>
-                <input type="number" name="count[]" placeholder="Count" required>
+                <input type="text" name="species[]" value="{{ request.form.get('species[]', '') }}" placeholder="Species Name" required>
+                <input type="number" name="count[]" value="{{ request.form.get('count[]', '') }}" placeholder="Count" required>
             </div>
 
             <button type="button" class="add-species-btn" onclick="addSpecies()">+ Add Species</button>
@@ -241,4 +239,9 @@
 
     {% include 'footer.html' %}
 </body>
+<script>
+     window.onload = function() {
+        document.getElementById('homeForm').reset();
+    };
+</script>
 </html>

@@ -2,6 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from pymongo import MongoClient
 import os
 from bson import ObjectId
+from opencage.geocoder import OpenCageGeocode
+from pprint import pprint
+
+from flask import request, render_template, redirect, url_for, session
+import os
+from opencage.geocoder import OpenCageGeocode
+from werkzeug.utils import secure_filename
+
+from werkzeug.utils import secure_filename
+import os
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change to a secure secret key
@@ -11,6 +22,16 @@ client = MongoClient("mongodb+srv://rohanpatil:Patil2909@farmapp.wuxmi.mongodb.n
 db = client['FarmApp']
 users_collection = db['users']
 farmer_data_collection = db['farmer_data']
+
+# OpenCage API key
+geocoder = OpenCageGeocode('9ceef2fbe59c4197ace5a70f35d0cc22')
+
+# Function to get address from coordinates using OpenCage
+def get_address_from_coordinates(lat, lng):
+    results = geocoder.reverse_geocode(lat, lng)
+    if results and len(results) > 0:
+        return results[0]['formatted']  # Return the formatted address
+    return None  # If no result is found, return None
 
 # Routes
 @app.route('/')
@@ -36,6 +57,7 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html', name=session['member_name'], role=session['role'])
 
+
 @app.route('/submit', methods=['POST'])
 def submit_form():
     if 'member_name' not in session:
@@ -46,43 +68,42 @@ def submit_form():
     count_list = request.form.getlist('count[]')
     farmer_name = request.form['farmer_name']
     contact_number = request.form['contact_number']
-    plot_location = request.form['plot_location']
-
-    # Validate contact number (should be 10 digits)
-    if not contact_number.isdigit() or len(contact_number) != 10:
-        # Return an error message and re-render the home page with the error message
-        return render_template('home.html', error="Contact number must be exactly 10 digits.", name=session['member_name'], role=session['role'])
+    plot_location = request.form['plot_location']  # Location as text
 
     # Validate plot location
     if not plot_location:
-        return render_template('home.html', error="Plot location is required.", name=session['member_name'], role=session['role'])
+        return render_template('home.html', error={"plot_location": "Plot location is required."}, name=session['member_name'], role=session['role'])
 
-    # Validate photo upload
+    # Contact number validation
+    if not contact_number.isdigit() or len(contact_number) != 10:
+        return render_template('home.html', error={"contact_number": "Contact number must be exactly 10 digits."}, name=session['member_name'], role=session['role'])
+
+    # File handling (check if file is present and valid)
     file = request.files.get('field_photo')
     if file is None or file.filename == '':
-        return render_template('home.html', error="Please upload a field photo.", name=session['member_name'], role=session['role'])
+        return render_template('home.html', error={"file": "Please upload a field photo."}, name=session['member_name'], role=session['role'])
 
-    # Prepare the data to insert into MongoDB
+    # Sanitize filename and save the file
+    filename = secure_filename(file.filename)
+    file_path = os.path.join('uploads', filename)
+    file.save(file_path)
+
+    # Prepare data for MongoDB
     data = {
         "farmer_name": farmer_name,
         "contact_number": contact_number,
-        "plot_location": plot_location,
-        "tree_species": species_list,
-        "species_count": count_list,
+        "plot_location": plot_location,  # Store the location as text
+        "tree_species": dict(zip(species_list, count_list)),  # Store as a dictionary (species: count)
         "submitted_by": session['member_name'],
-        "updated_by": None
+        "updated_by": None,
+        "field_photo": file_path
     }
 
-    # Handle file upload
-    filename = file.filename
-    file_path = os.path.join('uploads', filename)
-    file.save(file_path)
-    data['field_photo'] = file_path
-
-    # Insert data into MongoDB
+    # Insert data into the MongoDB collection
     farmer_data_collection.insert_one(data)
 
     return redirect(url_for('home'))
+
 
 @app.route('/view_data')
 def view_data():
