@@ -4,29 +4,91 @@
     <meta charset="utf-8">
     <title>Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            margin: 10px 0 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-messages {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-    {% include 'header.html' %}
-    <h2>Login</h2>
-    <form id="loginForm" action="/login" method="POST">
-        <label for="name">Name:</label>
-        <input type="text" name="name" id="name" required><br><br>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm" action="/login" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" required><br><br>
 
-        <label for="role">Role:</label>
-        <select name="role" id="role" required>
-            <option value="">Select Role</option>
-            <option value="Field Executive">Field Executive</option>
-            <option value="Field Manager">Field Manager</option>
-            <option value="Senior Manager">Senior Manager</option>
-        </select>
-        <br><br>
+            <label for="role">Role:</label>
+            <select name="role" id="role" required>
+                <option value="">Select Role</option>
+                <option value="Field Executive">Field Executive</option>
+                <option value="Field Manager">Field Manager</option>
+                <option value="Senior Manager">Senior Manager</option>
+            </select><br><br>
 
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required><br><br>
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password" required><br><br>
 
-        <div id="errorMessages" style="color: red;"></div>
-        <button type="submit">Login</button>
-    </form>
+            <div id="errorMessages" class="error-messages"></div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', function (event) {
@@ -45,6 +107,5 @@
             }
         });
     </script>
-    {% include 'footer.html' %}
 </body>
 </html>

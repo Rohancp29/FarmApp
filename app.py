@@ -41,28 +41,47 @@ def submit_form():
     if 'member_name' not in session:
         return redirect(url_for('login'))
 
+    # Get form data
     species_list = request.form.getlist('species[]')
     count_list = request.form.getlist('count[]')
-    
+    farmer_name = request.form['farmer_name']
+    contact_number = request.form['contact_number']
+    plot_location = request.form['plot_location']
+
+    # Validate contact number (should be 10 digits)
+    if not contact_number.isdigit() or len(contact_number) != 10:
+        # Return an error message and re-render the home page with the error message
+        return render_template('home.html', error="Contact number must be exactly 10 digits.", name=session['member_name'], role=session['role'])
+
+    # Validate plot location
+    if not plot_location:
+        return render_template('home.html', error="Plot location is required.", name=session['member_name'], role=session['role'])
+
+    # Validate photo upload
+    file = request.files.get('field_photo')
+    if file is None or file.filename == '':
+        return render_template('home.html', error="Please upload a field photo.", name=session['member_name'], role=session['role'])
+
+    # Prepare the data to insert into MongoDB
     data = {
-        "farmer_name": request.form['farmer_name'],
-        "contact_number": request.form['contact_number'],
-        "plot_location": request.form['plot_location'],
-        "tree_species": species_list,  # Tree species names
-        "species_count": count_list,  # Corresponding species counts
+        "farmer_name": farmer_name,
+        "contact_number": contact_number,
+        "plot_location": plot_location,
+        "tree_species": species_list,
+        "species_count": count_list,
         "submitted_by": session['member_name'],
         "updated_by": None
     }
 
     # Handle file upload
-    file = request.files['field_photo']
-    if file:
-        filename = file.filename
-        file_path = os.path.join('uploads', filename)
-        file.save(file_path)
-        data['field_photo'] = file_path
+    filename = file.filename
+    file_path = os.path.join('uploads', filename)
+    file.save(file_path)
+    data['field_photo'] = file_path
 
+    # Insert data into MongoDB
     farmer_data_collection.insert_one(data)
+
     return redirect(url_for('home'))
 
 @app.route('/view_data')

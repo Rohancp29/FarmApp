@@ -5,12 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Data</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
         form {
             width: 50%;
             margin: auto;
             border: 1px solid #ddd;
             padding: 20px;
             border-radius: 5px;
+            background-color: white;
         }
 
         form label {
@@ -34,10 +42,48 @@
             border: none;
         }
 
+        button:hover {
+            background-color: #45a049;
+        }
+
         .species-entry {
             margin-bottom: 10px;
         }
 
+        .species-entry input {
+            width: 48%;
+            display: inline-block;
+        }
+
+        .species-entry button {
+            width: 48%;
+            background-color: #e74c3c;
+            color: white;
+            cursor: pointer;
+            display: inline-block;
+            border: none;
+        }
+
+        .species-entry button:hover {
+            background-color: #c0392b;
+        }
+
+        /* Additional styling for the action buttons */
+        a.button, .button {
+            display: inline-block;
+            text-decoration: none;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            border: none;
+        }
+
+        a.button:hover, .button:hover {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body>
