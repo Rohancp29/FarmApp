@@ -73,15 +73,6 @@
         <form id="loginForm" action="/login" method="POST">
             <label for="name">Name:</label>
             <input type="text" name="name" id="name" required><br><br>
-
-            <label for="role">Role:</label>
-            <select name="role" id="role" required>
-                <option value="">Select Role</option>
-                <option value="Field Executive">Field Executive</option>
-                <option value="Field Manager">Field Manager</option>
-                <option value="Senior Manager">Senior Manager</option>
-            </select><br><br>
-
             <label for="password">Password:</label>
             <input type="password" name="password" id="password" required><br><br>
 
@@ -93,16 +84,14 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', function (event) {
             const name = document.getElementById('name').value.trim();
-            const role = document.getElementById('role').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorMessages = document.getElementById('errorMessages');
 
             errorMessages.innerHTML = '';
 
-            if (!name || !role || !password) {
+            if (!name || !password) {
                 event.preventDefault();
                 if (!name) errorMessages.innerHTML += '<p>Name is required.</p>';
-                if (!role) errorMessages.innerHTML += '<p>Role is required.</p>';
                 if (!password) errorMessages.innerHTML += '<p>Password is required.</p>';
             }
         });

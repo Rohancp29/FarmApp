@@ -34,14 +34,14 @@ def login():
 @app.route('/login', methods=['POST'])
 def handle_login():
     name = request.form['name'].strip()
-    role = request.form['role'].strip()
     password = request.form['password'].strip()
+    user = users_collection.find_one({"name": name, "password": password})
 
-    user = users_collection.find_one({"name": name, "role": role, "password": password})
     if user:
         session['member_name'] = user['name']
         session['role'] = user['role']
-        return redirect(url_for('home')) 
+        return redirect(url_for('home'))
+
     return render_template('login.html', error="Invalid Credentials! Please try again.")
 
 
