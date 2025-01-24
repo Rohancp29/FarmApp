@@ -101,17 +101,21 @@ def view_data():
     member_name = session['member_name']
     data = []
 
-    if role == "Field Executive":
-        data = farmer_data_collection.find({"submitted_by": member_name})
-    elif role == "Field Manager" and member_name == "C":
-        data = farmer_data_collection.find({"submitted_by": {"$in": ["A", "B", "C"]}})
-    elif role == "Field Manager" and member_name == "D":
-        data = farmer_data_collection.find({"submitted_by": "D"})
-    elif role == "Senior Manager":
-        data = farmer_data_collection.find()
-    else:
-        data = farmer_data_collection.find({"submitted_by": None})
+    role_conditions = {
+        "Field Executive": {"submitted_by": member_name},
+        "Field Manager": {
+            "C": {"submitted_by": {"$in": ["A", "B", "C"]}},
+            "D": {"submitted_by": "D"}
+        },
+        "Senior Manager": {}, 
+    }
 
+    if role == "Field Manager" and member_name in role_conditions[role]:
+        query = role_conditions[role][member_name]
+    else:
+        query = role_conditions.get(role, {"submitted_by": None})
+
+    data = farmer_data_collection.find(query)
     data_list = list(data)
 
     for entry in data_list:
@@ -121,7 +125,6 @@ def view_data():
             entry["tree_species"] = {}
 
     return render_template('view_data.html', data=data_list, name=member_name, role=role)
-
 
 @app.route('/edit_data/<data_id>', methods=['GET', 'POST'])
 def edit_data(data_id):
